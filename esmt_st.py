@@ -40,16 +40,12 @@ import gym_tensorflow
 
 
 def f_isSingleTask(exp):
-    # SDR: it checks whether we are using this code for single task learning
     isSingleTask = True
     cont = 0
     while cont < len(exp["games"]) - 1:
         if exp["games"][cont] != exp["games"][cont + 1]:
             isSingleTask = False
         cont += 1
-
-    # print("is single task = ")
-    # print(isSingleTask)
 
     return isSingleTask
 
@@ -218,14 +214,6 @@ def main(**exp):
     def make_env1(b):
         return gym_tensorflow.make(game=exp["games"][1], batch_size=b)
 
-#    if f_isSingleTask(exp):
-#        workers = [ ConcurrentWorkers(make_env0, Model, batch_size=64) ]
-#    else:
-#        workers = [
-#            ConcurrentWorkers(make_env0, Model, batch_size=32),
-#            ConcurrentWorkers(make_env1, Model, batch_size=32)
-#        ]
-
     workers = [
         ConcurrentWorkers(make_env0, Model, batch_size=64),
         ConcurrentWorkers(make_env1, Model, batch_size=64)
@@ -267,8 +255,6 @@ def main(**exp):
         state.num_frames += tf_sess.run(worker.steps_counter) - frames_computed_so_far
         game0_returns_n2 = np.array([a.rewards for a in game0_results])
         game0_noise_inds_n = [a.seeds for a in game0_results]
-        # tlogger.info("game0 rewards: {}".format(np.mean(game0_rewards)))
-        # tlogger.info("game0 eplens: {}".format(game0_episode_lengths))
         save_pickle(iteration, log_dir, "game0_rewards", game0_rewards)
         save_pickle(iteration, log_dir, "game0_episode_lengths", game0_episode_lengths)
 
@@ -301,8 +287,6 @@ def main(**exp):
             state.num_frames += tf_sess.run(worker.steps_counter) - frames_computed_so_far
             game1_returns_n2 = np.array([a.rewards for a in game1_results])
             game1_noise_inds_n = [a.seeds for a in game1_results]
-            # tlogger.info("game1 rewards: {}".format(np.mean(game1_rewards)))
-            # tlogger.info("game1 eplens: {}".format(game0_episode_lengths))
         save_pickle(iteration, log_dir, "game1_rewards", game1_rewards)
         save_pickle(iteration, log_dir, "game1_episode_lengths", game1_episode_lengths)
 
@@ -339,9 +323,9 @@ def main(**exp):
         assert count_frames == count_returns
         count = count_returns
 
-        w = exp['w'] # 0.5 = mean
+        w = exp['w']
         g = w*g_returns+(1-w)*g_frames
-        # NOTE: gradients are scaled by \theta
+
         returns_n2 = np.array([a.rewards for a in game0_results] + [a.rewards for a in game1_results])
         g /= returns_n2.size
 
